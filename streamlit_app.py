@@ -124,9 +124,10 @@ def get_risk_step(score, last_outcome):
     after_loss = {(5, 6.5): 1, (6.6, 7.5): 1, (7.6, 8.5): 1, (8.5, 10): 2}
     if score < 5: return 0
     table = after_win if last_outcome == "Win" else after_loss
-    for (low, high), step in table.items():
-        if low <= score <= high: return step
-    return 1
+    return next(
+        (step for (low, high), step in table.items() if low <= score <= high),
+        1,
+    )
 
 # Initialize session state variables for tracking cooldown
 if 'last_logged_params' not in st.session_state:
@@ -188,7 +189,7 @@ with main_col1:
     if os.path.isfile("trade_log.csv"):
         df_out = pd.read_csv("trade_log.csv")
         if "Outcome" in df_out.columns:
-            df_clean = df_out[df_out["Outcome"].isin(["Win", "Loss"])]
+            df_clean = df_out[df_out["Outcome"].isin(["Win", "Loss", "BE"])]
             if not df_clean.empty:
                 last_outcome = df_clean["Outcome"].iloc[-1]
 
@@ -200,9 +201,11 @@ with main_col1:
     st.markdown(f"<div class='suggestion-box'>Suggested Side: {suggested_side}</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='suggestion-box'>Suggested Risk: {risk_string}</div>", unsafe_allow_html=True)
 
+    outcome = st.selectbox("Trade Outcome", ["Win", "Loss", "Breakeven", "Not Executed"])
+
     # Result Cards
     st.markdown("---")
-    st.subheader("📈 Result")
+    st.subheader("📈 Scores")
     col_res1, col_res2 = st.columns(2)
     score_style_long = "metric-card" if long_score >= 5 else "metric-card low"
     score_style_short = "metric-card" if short_score >= 5 else "metric-card low"
@@ -215,8 +218,8 @@ with main_col1:
 # Log Panel
 with main_col2:
     st.subheader("📝 Log Your Trade")
-    market = st.selectbox("Market Instrument", ["GC", "MGC", "6E", "M6E", "6B", "M6B", "CL", "MCL", "ES", "MES", "NQ", "MNQ"])
-    side_choice = st.selectbox("Select trade side to log:", ["Buy (Long)", "Sell (Short)"])
+    market = st.selectbox("Market Instrument", ["MGC", "6E", "M6E", "6E", "6J", "6B", "MCL", "MES", "MNQ"])
+    side_choice = st.selectbox("Select trade side to log:", ["Long", "Short"])
 
     # Store current trade parameters
     current_params = {
@@ -245,13 +248,13 @@ with main_col2:
     if st.session_state.log_cooldown_until is not None:
         now = datetime.now()
         if now < st.session_state.log_cooldown_until:
-            # Check if parameters match those that triggered cooldown
+        # Check if parameters match those that triggered cooldown
             if st.session_state.last_logged_params is not None:
-                # Compare current params with last logged params
+            # Compare current params with last logged params
                 params_match = True
                 for key, value in current_params.items():
                     if key in st.session_state.last_logged_params and st.session_state.last_logged_params[key] != value:
-                        if key != "instrument":  # We already handled instrument change above
+                        if key != "instrument":
                             params_match = False
 
                 if params_match:
@@ -260,7 +263,7 @@ with main_col2:
                     cooldown_message = f"Cannot log duplicate trade. Please wait {int(time_left)} seconds."
 
     # Selected score based on trade side
-    selected_score = long_score if side_choice == "Buy (Long)" else short_score
+    selected_score = long_score if side_choice == "Long" else short_score
 
     # Logic for log button state
     if can_log:
@@ -279,42 +282,37 @@ with main_col2:
         st.warning(log_message)
 
     # Log trade button
-    if st.button("Log Trade",use_container_width=False, disabled=log_button_disabled):
-        if selected_score >= 5:
-            log_entry = {
-                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "Instrument": market,
-                "Direction": direction,
-                "Market Phase": phase,
-                "Volume Profile": profile,
-                "Access": access,
-                "Past Day Context": pd_context,
-                "Catalyst": catalyst,
-                "Long Score": round(long_score, 2),
-                "Short Score": round(short_score, 2),
-                "Trade Side": "Long" if side_choice == "Buy (Long)" else "Short",
-                "Suggested Side": suggested_side
-            }
-            file_exists = os.path.isfile("trade_log.csv")
-            df_log = pd.DataFrame([log_entry])
-            df_log.to_csv("trade_log.csv", mode='a', header=not file_exists, index=False)
+    if st.button("Log Trade", use_container_width=False, disabled=log_button_disabled) and selected_score >= 5:
+        log_entry = {
+            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Instrument": market,
+            "Direction": direction,
+            "Market Phase": phase,
+            "Volume Profile": profile,
+            "Access": access,
+            "Past Day Context": pd_context,
+            "Catalyst": catalyst,
+            "Long Score": round(long_score, 2),
+            "Short Score": round(short_score, 2),
+            "Trade Side": "Long" if side_choice == "Long" else "Short",
+            "Suggested Side": suggested_side,
+            "Outcome": outcome,
+        }
+        filepath = "trade_log.csv"
+        write_header = not os.path.exists(filepath) or os.stat(filepath).st_size == 0
+        df_log = pd.DataFrame([log_entry])
+        df_log.to_csv(filepath, mode='a', header=write_header, index=False, lineterminator='\n')
 
-            # Update session state with logged parameters and cooldown time
-            st.session_state.last_logged_params = current_params.copy()
-            st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
+    # Update session state with logged parameters and cooldown time
+        st.session_state.last_logged_params = current_params.copy()
+        st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
 
-            #st.success("Trade logged successfully!")
-
-# Update session state with logged parameters and cooldown time
-            st.session_state.last_logged_params = current_params.copy()
-            st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
-
-    if os.path.isfile("trade_log.csv"):
-        st.markdown("---")
+    # Update session state with logged parameters and cooldown time
+        st.session_state.last_logged_params = current_params.copy()
+        st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
         st.subheader("📂 Logged Trades")
         df_existing = pd.read_csv("trade_log.csv")
         st.dataframe(df_existing, use_container_width=True)
-
         csv = df_existing.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download Trade Log",
