@@ -1,1 +1,10 @@
-Timestamp,Instrument,Direction,Market Phase,Volume Profile,Access,Past Day Context,Catalyst,Long Score,Short Score,Trade Side,Suggested Side
+Timestamp,Instrument,Direction,Market Phase,Volume Profile,Access,Past Day Context,Catalyst,Long Score,Short Score,Trade Side,Suggested Side, Outcome
+2025-05-08 14:58:29,GC,Trending up w high vol,Phase A,P-shape,HVN 0.50 above VAH,Asia close inside PDR,no catalyst,8.5,4.5,Long,Long
+2025-05-08 14:58:36,6E,Trending up w high vol,Phase A,P-shape,HVN 0.50 above VAH,Asia close inside PDR,no catalyst,8.5,4.5,Long,Long
+2025-05-08 14:58:55,6E,Trending up w high vol,Phase A,b-shape,LVN 0.50 above POC,Asia close outside PDH,News event,7.0,6.5,Short,Long
+2025-05-08 15:08:48,GC,Trending up w high vol,Phase A,P-shape,LVN 0.50 above POC,Asia close inside PDR,Macro event,9.25,5.0,Short,Long
+2025-05-08 15:10:53,CL,Trending down w high vol,Phase B,D-shape,HVN 0.50 above VAH,Asia close outside PDL,Macro event,4.25,8.5,Short,Short,Win
+2025-05-08 15:11:16,GC,Trending down w high vol,Phase A,D-shape,HVN 0.50 above VAH,Asia close outside PDL,Macro event,5.25,9.5,Short,Short,Win
+2025-05-08 15:14:55,GC,Trending down w high vol,Phase A,b-shape,HVN 0.50 above VAH,Asia close outside PDL,Macro event,3.75,10.0,Short,Short,Win
+2025-05-08 15:15:01,GC,Trending down w high vol,Phase A,b-shape,HVN 0.50 above VAH,Asia close outside PDL,Macro event,3.75,10.0,Short,Short,Win
+2025-05-09 09:43:16,GC,Trending down w high vol,Phase A,P-shape,VAH,Asia close inside PDR,Data Driven,5.75,7.25,Long,Short,Win
