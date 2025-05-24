@@ -218,7 +218,7 @@ with main_col1:
 # Log Panel
 with main_col2:
     st.subheader("📝 Log Your Trade")
-    market = st.selectbox("Market Instrument", ["MGC", "6E", "M6E", "6E", "6J", "6B", "MCL", "MES", "MNQ"])
+    market = st.selectbox("Market Instrument", ["MGC", "MCL", "6E", "6B", "6J", "6A", "MES", "MNQ", "MYM"])
     side_choice = st.selectbox("Select trade side to log:", ["Long", "Short"])
 
     # Store current trade parameters
@@ -302,10 +302,6 @@ with main_col2:
         write_header = not os.path.exists(filepath) or os.stat(filepath).st_size == 0
         df_log = pd.DataFrame([log_entry])
         df_log.to_csv(filepath, mode='a', header=write_header, index=False, lineterminator='\n')
-
-    # Update session state with logged parameters and cooldown time
-        st.session_state.last_logged_params = current_params.copy()
-        st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
 
     # Update session state with logged parameters and cooldown time
         st.session_state.last_logged_params = current_params.copy()
