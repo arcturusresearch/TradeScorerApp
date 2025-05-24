@@ -218,8 +218,8 @@ with main_col1:
 # Log Panel
 with main_col2:
     st.subheader("📝 Log Your Trade")
-    market = st.selectbox("Market Instrument", ["MGC", "MCL", "6E", "6B", "6J", "6A", "MES", "MNQ", "MYM"])
-    side_choice = st.selectbox("Select trade side to log:", ["Long", "Short"])
+    market = st.selectbox("Market Instrument", ["GC", "MGC", "6E", "M6E", "6B", "M6B", "CL", "MCL", "ES", "MES", "NQ", "MNQ"])
+    side_choice = st.selectbox("Select trade side to log:", ["Buy (Long)", "Sell (Short)"])
 
     # Store current trade parameters
     current_params = {
@@ -282,30 +282,38 @@ with main_col2:
         st.warning(log_message)
 
     # Log trade button
-    if st.button("Log Trade", use_container_width=False, disabled=log_button_disabled) and selected_score >= 5:
-        log_entry = {
-            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Instrument": market,
-            "Direction": direction,
-            "Market Phase": phase,
-            "Volume Profile": profile,
-            "Access": access,
-            "Past Day Context": pd_context,
-            "Catalyst": catalyst,
-            "Long Score": round(long_score, 2),
-            "Short Score": round(short_score, 2),
-            "Trade Side": "Long" if side_choice == "Long" else "Short",
-            "Suggested Side": suggested_side,
-            "Outcome": outcome,
-        }
-        filepath = "trade_log.csv"
-        write_header = not os.path.exists(filepath) or os.stat(filepath).st_size == 0
-        df_log = pd.DataFrame([log_entry])
-        df_log.to_csv(filepath, mode='a', header=write_header, index=False, lineterminator='\n')
+    if st.button("Log Trade",use_container_width=False, disabled=log_button_disabled):
+        if selected_score >= 5:
+            log_entry = {
+                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Instrument": market,
+                "Direction": direction,
+                "Market Phase": phase,
+                "Volume Profile": profile,
+                "Access": access,
+                "Past Day Context": pd_context,
+                "Catalyst": catalyst,
+                "Long Score": round(long_score, 2),
+                "Short Score": round(short_score, 2),
+                "Trade Side": "Long" if side_choice == "Buy (Long)" else "Short",
+                "Suggested Side": suggested_side
+            }
+            file_exists = os.path.isfile("trade_log.csv")
+            df_log = pd.DataFrame([log_entry])
+            df_log.to_csv("trade_log.csv", mode='a', header=not file_exists, index=False)
 
-    # Update session state with logged parameters and cooldown time
-        st.session_state.last_logged_params = current_params.copy()
-        st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
+            # Update session state with logged parameters and cooldown time
+            st.session_state.last_logged_params = current_params.copy()
+            st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
+
+            #st.success("Trade logged successfully!")
+
+# Update session state with logged parameters and cooldown time
+            st.session_state.last_logged_params = current_params.copy()
+            st.session_state.log_cooldown_until = datetime.now() + pd.Timedelta(minutes=1)
+
+    if os.path.isfile("trade_log.csv"):
+        st.markdown("---")
         st.subheader("📂 Logged Trades")
         df_existing = pd.read_csv("trade_log.csv")
         st.dataframe(df_existing, use_container_width=True)
