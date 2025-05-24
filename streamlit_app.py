@@ -218,7 +218,7 @@ with main_col1:
 # Log Panel
 with main_col2:
     st.subheader("📝 Log Your Trade")
-    market = st.selectbox("Market Instrument", ["GC", "MGC", "6E", "M6E", "6B", "M6B", "CL", "MCL", "ES", "MES", "NQ", "MNQ"])
+    market = st.selectbox("Market Instrument", ["MGC", "MCL", "6E", "6B", "6J", "6A", "MES", "MNQ", "MYM"])
     side_choice = st.selectbox("Select trade side to log:", ["Buy (Long)", "Sell (Short)"])
 
     # Store current trade parameters
